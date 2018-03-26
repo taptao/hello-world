@@ -1,0 +1,103 @@
+
+查看源主机上orcl数据库需要备份的各文件位置，冷备份需要备份包括控制文件，参数文件，密码文件，数据文件，联机重做日志文件
+控制文件
+
+SQL: select * from V$CONTROLFILE
+
+Result:
+
+------------------------------
+
+D:\ORACLE11G\ORADATA\ORCL\CONTROL01.CTL
+
+D:\ORACLE11G\FLASH_RECOVERY_AREA\ORCL\CONTROL02.CTL
+
+
+参数文件
+
+SQL: select * from V$PARAMETER where name like '%spfile%'
+
+Result:
+
+------------------------------
+
+D:\ORACLE11G\PRODUCT\11.2.0\DBHOME_1\DATABASE\SPFILEORCL.ORA
+
+
+密码文件
+
+D:\Oracle11g\product\11.2.0\dbhome_1\database\PWDorcl.ora
+
+
+数据文件
+
+SQL: select * from V$DATAFILE
+
+Result:
+
+------------------------------
+
+D:\ORACLE11G\ORADATA\ORCL\SYSTEM01.DBF
+
+D:\ORACLE11G\ORADATA\ORCL\SYSAUX01.DBF
+
+D:\ORACLE11G\ORADATA\ORCL\UNDOTBS01.DBF
+
+D:\ORACLE11G\ORADATA\ORCL\USERS01.DBF
+
+D:\ORACLE11G\ORADATA\ORCL\EXAMPLE01.DBF
+
+D:\ORACLE11G\ORADATA\ORCL\STUDYDEMO_DATA01.DBF
+
+ 
+
+联机重做日志文件
+
+SQL: select * from V$LOGFILE
+
+Result:
+
+------------------------------
+
+D:\ORACLE11G\ORADATA\ORCL\REDO03.LOG
+
+D:\ORACLE11G\ORADATA\ORCL\REDO02.LOG
+
+D:\ORACLE11G\ORADATA\ORCL\REDO01.LOG
+
+将上述文件备份出来
+
+在目标电脑创建一样的实例，oracle的安装位置也要一样。
+如果不一样把控制文件删除，重新配置控制文件。
+在源机上重建目标机的控制文件
+SQL>alter database backup controlfile to trace;
+然后会在trace文件夹下产生一个追踪文件，
+打开文件找到类似于
+STARTUP NOMOUNT
+CREATE CONTROLFILE REUSE DATABASE "ORCL" NORESETLOGS  NOARCHIVELOG
+    MAXLOGFILES 16
+    MAXLOGMEMBERS 3
+    MAXDATAFILES 100
+    MAXINSTANCES 8
+    MAXLOGHISTORY 292
+LOGFILE
+  GROUP 1 'D:\APP\ADMIN\ORADATA\ORCL\REDO01.LOG'  SIZE 50M BLOCKSIZE 512,
+  GROUP 2 'D:\APP\ADMIN\ORADATA\ORCL\REDO02.LOG'  SIZE 50M BLOCKSIZE 512,
+  GROUP 3 'D:\APP\ADMIN\ORADATA\ORCL\REDO03.LOG'  SIZE 50M BLOCKSIZE 512
+-- STANDBY LOGFILE
+DATAFILE
+  'D:\APP\ADMIN\ORADATA\ORCL\SYSTEM01.DBF',
+  'D:\APP\ADMIN\ORADATA\ORCL\SYSAUX01.DBF',
+  'D:\APP\ADMIN\ORADATA\ORCL\UNDOTBS01.DBF',
+  'D:\APP\ADMIN\ORADATA\ORCL\USERS01.DBF',
+  'D:\APP\ADMIN\ORADATA\ORCL\EXAMPLE01.DBF'
+CHARACTER SET ZHS16GBK
+;
+的地方复制下来。
+修改相应路径然后保存为:createctl.sql文件（sql脚本文件），
+复制到目标机上。
+ SQL>@c:\createctl.sql;
+ SQL> recover database;
+ SQL>shutdown immediate;
+ SQL>startup;
+ SQL>alter database open;
