@@ -105,3 +105,15 @@ CHARACTER SET ZHS16GBK
 热备份：
 用imp导入导出数据时候，因为外键原因，可能丢失部分数据，使用impdp 泵可以解决。
 可以导出某个方案(用户），可以级联删除该用户，然后重新创建用户，最后导入数据。
+创建用户，赋予权限
+create user TOOLBOX identified by 123456;
+alter user TOOLBOX default tablespace TOOLBOX;
+grant CREATE ANY DIRECTORY,create session,create table,create view,unlimited tablespace to TOOLBOX;
+登录ToolBox用户
+创建DIRECTORY
+CREATE OR REPLACE DIRECTORY 
+DMPDIR AS  'c:\'; 
+编写导入impdp语句
+impdp toolbox/123456 DIRECTORY=DMPDIR DUMPFILE=hz_toolbox_20160613.dmp full=y
+
+
